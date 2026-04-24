@@ -1,100 +1,19 @@
-<!DOCTYPE html>
-
+<!doctype html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Calculadora de Costo de Vehículo</title>
-<style>
-body { font-family: Arial; margin: 20px; }
-input { width: 80px; }
-table { border-collapse: collapse; margin-top: 10px; }
-td, th { border: 1px solid #ccc; padding: 5px; text-align: center; }
-button { margin: 5px; }
-</style>
-</head>
-<body>
-
-<h2>Calculadora de costo real de vehículo</h2>
-
-<h3>Datos del vehículo</h3>
-Consumo (km/L): <input id="consumo" value="11"><br>
-Km mensuales: <input id="kmMensual" value="680"><br>
-Precio combustible ($): <input id="precioCombustible" value="82.27"><br>
-
-<h3>Viajes adicionales</h3>
-<button onclick="agregarViaje()">Agregar viaje</button>
-<table id="viajes">
-<tr><th>Nombre</th><th>Veces/año</th><th>Km ida/vuelta</th></tr>
-</table>
-
-<h3>Repuestos / servicios</h3>
-<button onclick="agregarItem()">Agregar ítem</button>
-<table id="items">
-<tr><th>Nombre</th><th>Costo</th><th>Vida (km)</th><th>Vida (años)</th></tr>
-</table>
-
-<h3>Resultados</h3>
-<button onclick="calcular()">Calcular</button>
-
-<p id="resultado"></p>
-
-<script>
-
-function agregarViaje(){
-  let t = document.getElementById("viajes");
-  let row = t.insertRow();
-  row.innerHTML = '<td><input></td><td><input type="number"></td><td><input type="number"></td>';
-}
-
-function agregarItem(){
-  let t = document.getElementById("items");
-  let row = t.insertRow();
-  row.innerHTML = '<td><input></td><td><input type="number"></td><td><input type="number"></td><td><input type="number"></td>';
-}
-
-function calcular(){
-  let consumo = parseFloat(document.getElementById("consumo").value);
-  let kmMensual = parseFloat(document.getElementById("kmMensual").value);
-  let precio = parseFloat(document.getElementById("precioCombustible").value);
-
-  let kmAnual = kmMensual * 12;
-
-  let viajes = document.getElementById("viajes").rows;
-  for(let i=1;i<viajes.length;i++){
-    let veces = parseFloat(viajes[i].cells[1].children[0].value) || 0;
-    let km = parseFloat(viajes[i].cells[2].children[0].value) || 0;
-    kmAnual += veces * km;
-  }
-
-  let litros = kmAnual / consumo;
-  let combustible = litros * precio;
-
-  let items = document.getElementById("items").rows;
-  let mantenimiento = 0;
-
-  for(let i=1;i<items.length;i++){
-    let costo = parseFloat(items[i].cells[1].children[0].value) || 0;
-    let vidaKm = parseFloat(items[i].cells[2].children[0].value) || 0;
-    let vidaAnios = parseFloat(items[i].cells[3].children[0].value) || 0;
-
-    let anualKm = vidaKm ? (costo / vidaKm * kmAnual) : 0;
-    let anualTiempo = vidaAnios ? (costo / vidaAnios) : 0;
-
-    mantenimiento += Math.max(anualKm, anualTiempo);
-  }
-
-  let total = combustible + mantenimiento;
-
-  document.getElementById("resultado").innerHTML =
-    "Km anuales: " + Math.round(kmAnual) + "<br>" +
-    "Combustible anual: $" + Math.round(combustible) + "<br>" +
-    "Mantenimiento anual: $" + Math.round(mantenimiento) + "<br>" +
-    "<b>Total anual: $" + Math.round(total) + "</b><br>" +
-    "Mensual: $" + Math.round(total/12) + "<br>" +
-    "Costo por km: $" + (total/kmAnual).toFixed(2);
-}
-
-</script>
-
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <meta
+      name="description"
+      content="Calculadora comparativa para estimar el costo real anual de tener un vehiculo en Uruguay."
+    />
+    <title>Garage Cost UY</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
