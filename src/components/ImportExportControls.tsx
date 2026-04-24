@@ -6,6 +6,7 @@ interface ImportExportControlsProps {
   onImport: (file: File) => void;
   onReset: () => void;
   onAddVehicle: () => void;
+  addLabel?: string;
 }
 
 export function ImportExportControls({
@@ -13,6 +14,7 @@ export function ImportExportControls({
   onImport,
   onReset,
   onAddVehicle,
+  addLabel = 'Agregar vehiculo',
 }: ImportExportControlsProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -20,7 +22,7 @@ export function ImportExportControls({
     <div className="flex flex-wrap gap-3">
       <button className="action-button-primary" type="button" onClick={onAddVehicle}>
         <Plus className="h-4 w-4" />
-        Agregar vehiculo
+        {addLabel}
       </button>
       <button className="action-button" type="button" onClick={onExport}>
         <Download className="h-4 w-4" />
@@ -49,7 +51,7 @@ export function ImportExportControls({
           event.target.value = '';
         }}
       />
-      <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/4 px-3 py-2 text-xs text-zinc-400">
+      <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-400">
         <FileJson className="h-4 w-4" />
         Persistencia automatica en localStorage
       </div>

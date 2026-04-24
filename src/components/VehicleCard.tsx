@@ -45,7 +45,7 @@ export function VehicleCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="rounded-2xl border border-white/8 bg-white/4 px-4 py-3">
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
             <div className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">Uso anual</div>
             <div className="text-lg font-semibold text-zinc-50">{formatNumber(result.breakdown.annualKm)} km</div>
             <div className="text-xs text-zinc-400">

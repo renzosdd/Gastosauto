@@ -1,17 +1,6 @@
 # Garage Cost UY
 
-Aplicacion web moderna para comparar el costo real anual de tener un vehiculo en Uruguay.
-
-La app permite cargar autos a nafta, gasoil y electricos, editar sus parametros tecnicos y comparar escenarios con foco en:
-
-- energia o combustible
-- mantenimiento programado
-- repuestos de desgaste
-- contingencias
-- costos fijos anuales
-- depreciacion
-
-Todo queda guardado automaticamente en `localStorage`, y tambien se puede exportar/importar el estado completo en JSON.
+Aplicacion web para estimar y comparar el costo real anual de tener un vehiculo en Uruguay, con una segunda capa orientada a garage propio: historial de cargas, timeline de mantenimientos y seguimiento de kilometraje real.
 
 ## Stack
 
@@ -33,35 +22,42 @@ Build de produccion:
 npm run build
 ```
 
-## Que incluye
+## Estructura funcional
 
-- Dashboard tecnico con cards, ranking y alertas
-- Comparacion lado a lado entre multiples vehiculos
-- Alta, edicion, duplicado y eliminacion de vehiculos
-- Viajes recurrentes editables para sumar kilometraje anual real
-- Catalogo editable de mantenimiento y desgaste por vehiculo
-- Reset a datos semilla
-- Export/import JSON
+La app ahora se organiza en cuatro vistas:
+
+- `Resumen`: cards, ranking, dashboard tecnico y lectura global del garage.
+- `Comparador`: escenarios editables lado a lado para termicos y electricos.
+- `Mis vehiculos`: autos propios con odometro, cargas y mantenimientos realizados.
+- `Supuestos`: precios de referencia y horizonte de analisis.
+
+## Lo nuevo en esta version
+
+- Vehiculos propios persistidos por separado del comparador
+- Timeline de mantenimientos realizados con fecha, costo y kilometraje
+- Registro de cargas de combustible o energia por vehiculo
+- Actualizacion del kilometraje actual a partir de historial registrado
+- Calculo de rendimiento observado desde cargas consecutivas
+- Accion para pasar un vehiculo propio al comparador usando su consumo observado cuando existe
+- Import/export JSON versionado de todo el estado
 
 ## Datos iniciales
 
-La app arranca con dos escenarios precargados:
+El proyecto arranca con:
 
-1. `Peugeot 206 usado` a nafta
-   - consumo: `11 km/L`
-   - km mensuales: `680`
-   - precio nafta: `82.27`
-   - viajes: `Chuy 2x800` y `Aguas Blancas 8x250`
-2. `Electrico compacto`
-   - consumo: `15 kWh/100 km`
-   - km mensuales: `680`
-   - precio energia editable
-   - mismos viajes
-   - mantenimiento adaptado a electrico
+- Escenarios de comparacion:
+  - `Peugeot 206 usado`
+  - `Diesel compacta`
+  - `Electrico compacto`
+- Garage propio:
+  - `Mi Peugeot 206`
+  - `Mi EV compacto`
+
+Los vehiculos del garage ya traen algunas cargas y mantenimientos para mostrar el flujo.
 
 ## Formulas usadas
 
-### Kilometraje anual
+### Kilometraje anual estimado
 
 ```txt
 km_anuales = km_mensuales_base * 12 + suma(viajes.vecesPorAnio * viajes.kmIdaVuelta)
@@ -116,40 +112,67 @@ costo_mensual = total_anual / 12
 costo_por_km = total_anual / km_anuales
 ```
 
-## Como agregar o editar vehiculos
+## Rendimiento observado desde cargas
 
-1. Usa `Agregar vehiculo` para crear un nuevo escenario.
-2. Completa la ficha tecnica: marca, modelo, anio, tipo de energia, consumo, precio de energia, seguros y depreciacion.
-3. Ajusta los viajes recurrentes para reflejar tu kilometraje real.
-4. Activa, desactiva o modifica items del catalogo de mantenimiento.
-5. Si quieres comparar variantes del mismo auto, usa `Duplicar`.
+En `Mis vehiculos`, el promedio real se calcula usando cargas consecutivas con odometro creciente.
+
+Para nafta y gasoil:
+
+```txt
+promedio_real_km_por_litro = distancia_entre_cargas / litros_de_la_carga_actual
+```
+
+Para electricos:
+
+```txt
+promedio_real_kwh_100km = (kwh_de_la_carga_actual / distancia_entre_cargas) * 100
+```
+
+La app agrega los segmentos validos para generar un promedio global por vehiculo.
+
+## Como usar el comparador
+
+1. Entra a `Comparador`.
+2. Agrega o duplica escenarios.
+3. Edita ficha tecnica, viajes y catalogo de mantenimiento.
+4. Revisa total anual, mensual, costo por km y ranking.
+
+## Como usar `Mis vehiculos`
+
+1. Agrega un vehiculo propio.
+2. Completa su ficha tecnica.
+3. Registra cargas con fecha, odometro, litros o kWh y costo.
+4. Registra mantenimientos realizados con fecha, costo y kilometraje.
+5. Usa `Usar en comparador` para llevar ese auto al comparador con su consumo observado si ya tiene historial suficiente.
 
 ## Como comparar termicos vs electricos
 
-- Usa un vehiculo a nafta o gasoil como base de referencia.
-- Duplica o crea un segundo vehiculo electrico.
-- Mantene el mismo kilometraje y los mismos viajes para que la comparacion sea limpia.
-- Revisa en la tabla comparativa:
+- Usa el mismo perfil de kilometraje y viajes en los escenarios.
+- Ajusta precios de energia por vehiculo o desde `Supuestos`.
+- Si tienes un auto propio con historial, cargalo desde `Mis vehiculos` y envialo al comparador.
+- Mira especialmente:
   - total anual
-  - costo mensual
   - costo por km
   - energia anual
-  - mantenimiento/desgaste
+  - mantenimiento y desgaste
   - contingencia
   - costos fijos
   - depreciacion
-- Mira las alertas del dashboard para detectar si el ahorro en energia queda opacado por seguro, depreciacion o contingencias.
 
 ## Estructura principal
 
 ```txt
 src/
   components/
+    AssumptionsPanel.tsx
     ComparisonTable.tsx
     CostSummary.tsx
     Dashboard.tsx
+    FuelLogTable.tsx
     ImportExportControls.tsx
+    MaintenanceHistoryTable.tsx
     MaintenanceTable.tsx
+    Sidebar.tsx
     TripsEditor.tsx
     VehicleCard.tsx
     VehicleForm.tsx
@@ -160,18 +183,19 @@ src/
   types.ts
 ```
 
-## Funciones puras clave
+## Funciones clave
 
-En `src/lib/calculations.ts` quedan centralizadas las funciones pedidas:
+En `src/lib/calculations.ts` quedan centralizadas:
 
 - `calculateAnnualKm`
 - `calculateEnergyCost`
 - `calculateItemAnnualCost`
+- `calculateFuelLogMetrics`
 - `calculateVehicleTotal`
 - `compareVehicles`
 
 ## Notas tecnicas
 
-- Los electricos cargan un catalogo de mantenimiento especifico y no incluyen aceite, bujias, filtro de combustible, embrague ni distribucion.
-- Los costos fijos anuales se manejan por campos dedicados del vehiculo para evitar dobles conteos.
-- El import/export usa un payload versionado para facilitar extensiones futuras.
+- Los electricos cargan un catalogo especifico y no incluyen aceite, bujias, filtro de combustible, embrague ni distribucion.
+- El import/export usa payload versionado `v2`.
+- Los vehiculos del garage y los escenarios del comparador se guardan por separado dentro del mismo estado persistido.

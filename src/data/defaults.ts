@@ -1,5 +1,15 @@
 import { createId } from '@/lib/id';
-import { EnergyType, MaintenanceItem, Trip, Vehicle } from '@/types';
+import {
+  AppData,
+  EnergyType,
+  FuelLog,
+  GarageVehicle,
+  GlobalAssumptions,
+  MaintenanceItem,
+  MaintenanceRecord,
+  Trip,
+  Vehicle,
+} from '@/types';
 
 function makeTrip(name: string, frequencyPerYear: number, roundTripKm: number): Trip {
   return {
@@ -17,8 +27,34 @@ function makeItem(item: Omit<MaintenanceItem, 'id'>): MaintenanceItem {
   };
 }
 
+function makeFuelLog(log: Omit<FuelLog, 'id'>): FuelLog {
+  return {
+    id: createId('fuel'),
+    ...log,
+  };
+}
+
+function makeMaintenanceRecord(record: Omit<MaintenanceRecord, 'id'>): MaintenanceRecord {
+  return {
+    id: createId('service'),
+    ...record,
+  };
+}
+
 export function createDefaultTrips(): Trip[] {
   return [makeTrip('Chuy', 2, 800), makeTrip('Aguas Blancas', 8, 250)];
+}
+
+export function createDefaultAssumptions(): GlobalAssumptions {
+  return {
+    updatedAt: '2026-04-24',
+    annualKmReference: 15000,
+    gasolinePrice: 82.27,
+    dieselPrice: 61.49,
+    electricityPrice: 11.2,
+    analysisHorizonYears: 5,
+    discountRatePercent: 8,
+  };
 }
 
 export function createMaintenanceCatalog(energyType: EnergyType): MaintenanceItem[] {
@@ -191,7 +227,7 @@ export function createMaintenanceCatalog(energyType: EnergyType): MaintenanceIte
       usefulLifeYears: 7,
       appliesTo: 'todos',
       active: true,
-      notes: 'No aplica a EV, ni a algunas cajas especiales.',
+      notes: 'No aplica a EV ni a algunas cajas especiales.',
     }),
     makeItem({
       name: 'Correa auxiliar',
@@ -396,16 +432,6 @@ export function createMaintenanceCatalog(energyType: EnergyType): MaintenanceIte
       active: true,
       notes: 'No es recambio completo; es fondo tecnico.',
     }),
-    makeItem({
-      name: 'Seguro/patente/costos fijos (referencia)',
-      category: 'fijo',
-      cost: 0,
-      usefulLifeKm: null,
-      usefulLifeYears: 1,
-      appliesTo: 'electrico',
-      active: false,
-      notes: 'Ya contemplado por los campos fijos del vehiculo.',
-    }),
   ];
 
   if (energyType === 'electrico') {
@@ -419,8 +445,6 @@ export function createVehicleTemplate(
   energyType: EnergyType,
   overrides: Partial<Vehicle> = {},
 ): Vehicle {
-  const baseTrips = createDefaultTrips();
-
   const base: Record<EnergyType, Omit<Vehicle, 'id'>> = {
     nafta: {
       name: 'Peugeot 206 usado',
@@ -436,7 +460,7 @@ export function createVehicleTemplate(
       annualFixedCosts: 9500,
       estimatedValue: 315000,
       annualDepreciationPercent: 8,
-      trips: baseTrips,
+      trips: createDefaultTrips(),
       maintenanceItems: createMaintenanceCatalog('nafta'),
     },
     gasoil: {
@@ -482,6 +506,202 @@ export function createVehicleTemplate(
   };
 }
 
-export function createInitialVehicles(): Vehicle[] {
-  return [createVehicleTemplate('nafta'), createVehicleTemplate('electrico')];
+export function createGarageVehicleTemplate(
+  energyType: EnergyType,
+  overrides: Partial<GarageVehicle> = {},
+): GarageVehicle {
+  const baseVehicle = createVehicleTemplate(energyType);
+
+  const seedLogsByType: Record<EnergyType, FuelLog[]> = {
+    nafta: [
+      makeFuelLog({
+        date: '2026-03-08',
+        odometerKm: 146120,
+        energyUnits: 31.4,
+        totalCost: 2573,
+        fullRefill: true,
+        station: 'ANCAP',
+        notes: 'Uso mixto ciudad/ruta.',
+      }),
+      makeFuelLog({
+        date: '2026-03-29',
+        odometerKm: 146468,
+        energyUnits: 29.8,
+        totalCost: 2449,
+        fullRefill: true,
+        station: 'DUCSA',
+        notes: 'Con ida a Aguas Blancas.',
+      }),
+      makeFuelLog({
+        date: '2026-04-19',
+        odometerKm: 146812,
+        energyUnits: 30.7,
+        totalCost: 2526,
+        fullRefill: true,
+        station: 'ANCAP',
+        notes: 'Carga completa.',
+      }),
+    ],
+    gasoil: [
+      makeFuelLog({
+        date: '2026-03-14',
+        odometerKm: 78120,
+        energyUnits: 34.5,
+        totalCost: 2121,
+        fullRefill: true,
+        station: 'DUCSA',
+        notes: 'Referencia diesel.',
+      }),
+      makeFuelLog({
+        date: '2026-04-03',
+        odometerKm: 78685,
+        energyUnits: 35.1,
+        totalCost: 2158,
+        fullRefill: true,
+        station: 'ANCAP',
+        notes: 'Uso rutero predominante.',
+      }),
+    ],
+    electrico: [
+      makeFuelLog({
+        date: '2026-03-11',
+        odometerKm: 24210,
+        energyUnits: 42,
+        totalCost: 470,
+        fullRefill: true,
+        station: 'UTE hogar',
+        notes: 'Carga nocturna.',
+      }),
+      makeFuelLog({
+        date: '2026-03-28',
+        odometerKm: 24495,
+        energyUnits: 39,
+        totalCost: 437,
+        fullRefill: true,
+        station: 'UTE hogar',
+        notes: 'Con tramos urbanos.',
+      }),
+      makeFuelLog({
+        date: '2026-04-15',
+        odometerKm: 24780,
+        energyUnits: 40,
+        totalCost: 448,
+        fullRefill: true,
+        station: 'UTE hogar',
+        notes: 'Autonomia estable.',
+      }),
+    ],
+  };
+
+  const seedMaintenanceByType: Record<EnergyType, MaintenanceRecord[]> = {
+    nafta: [
+      makeMaintenanceRecord({
+        date: '2026-02-18',
+        itemName: 'Cambio de aceite + filtro',
+        category: 'mantenimiento',
+        cost: 4300,
+        odometerKm: 145800,
+        notes: 'Cambio con filtro y revision general.',
+      }),
+      makeMaintenanceRecord({
+        date: '2025-11-07',
+        itemName: 'Pastillas de freno',
+        category: 'desgaste',
+        cost: 5600,
+        odometerKm: 143950,
+        notes: 'Eje delantero.',
+      }),
+    ],
+    gasoil: [
+      makeMaintenanceRecord({
+        date: '2026-01-12',
+        itemName: 'Cambio de aceite + filtro',
+        category: 'mantenimiento',
+        cost: 6100,
+        odometerKm: 77500,
+        notes: 'Cambio preventivo.',
+      }),
+    ],
+    electrico: [
+      makeMaintenanceRecord({
+        date: '2026-02-09',
+        itemName: 'Chequeo sistema electrico',
+        category: 'electrico',
+        cost: 5200,
+        odometerKm: 24010,
+        notes: 'Diagnostico sin novedades.',
+      }),
+      makeMaintenanceRecord({
+        date: '2025-12-02',
+        itemName: 'Filtro habitaculo',
+        category: 'mantenimiento',
+        cost: 980,
+        odometerKm: 23100,
+        notes: 'Mantenimiento anual.',
+      }),
+    ],
+  };
+
+  const defaultCurrentOdometer = Math.max(
+    ...seedLogsByType[energyType].map((log) => log.odometerKm),
+    0,
+  );
+
+  return {
+    ...baseVehicle,
+    currentOdometerKm: defaultCurrentOdometer,
+    fuelLogs: seedLogsByType[energyType],
+    maintenanceRecords: seedMaintenanceByType[energyType],
+    ...overrides,
+  };
+}
+
+export function createInitialAppData(): AppData {
+  return {
+    comparisonVehicles: [
+      createVehicleTemplate('nafta'),
+      createVehicleTemplate('gasoil', {
+        name: 'Diesel compacta',
+        brand: 'Toyota',
+        model: 'Corolla Cross',
+        year: 2022,
+        estimatedValue: 1680000,
+        annualInsurance: 58200,
+        annualRegistration: 46781,
+        annualFixedCosts: 12500,
+      }),
+      createVehicleTemplate('electrico', {
+        name: 'Electrico compacto',
+        brand: 'BYD',
+        model: 'Dolphin',
+        year: 2024,
+        estimatedValue: 1685000,
+        annualInsurance: 32450,
+        annualRegistration: 27689,
+        annualFixedCosts: 5000,
+      }),
+    ],
+    garageVehicles: [
+      createGarageVehicleTemplate('nafta', {
+        name: 'Mi Peugeot 206',
+        brand: 'Peugeot',
+        model: '206',
+        year: 2008,
+        estimatedValue: 315000,
+        annualInsurance: 18500,
+        annualRegistration: 24000,
+      }),
+      createGarageVehicleTemplate('electrico', {
+        name: 'Mi EV compacto',
+        brand: 'BYD',
+        model: 'Dolphin',
+        year: 2024,
+        baseMonthlyKm: 920,
+        estimatedValue: 1685000,
+        annualInsurance: 32450,
+        annualRegistration: 27689,
+      }),
+    ],
+    assumptions: createDefaultAssumptions(),
+  };
 }

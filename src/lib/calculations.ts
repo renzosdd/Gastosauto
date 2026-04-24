@@ -1,4 +1,13 @@
-import { ComparisonResult, CostBreakdown, MaintenanceItem, Vehicle, VehicleResult } from '@/types';
+import {
+  ComparisonResult,
+  CostBreakdown,
+  FuelLog,
+  FuelLogMetrics,
+  GarageVehicle,
+  MaintenanceItem,
+  Vehicle,
+  VehicleResult,
+} from '@/types';
 
 export function calculateAnnualKm(baseMonthlyKm: number, trips: Vehicle['trips']): number {
   const tripKm = trips.reduce(
@@ -9,19 +18,25 @@ export function calculateAnnualKm(baseMonthlyKm: number, trips: Vehicle['trips']
   return baseMonthlyKm * 12 + tripKm;
 }
 
-export function calculateEnergyCost(vehicle: Vehicle, annualKm: number): {
+export function calculateEnergyCost(
+  vehicle: Vehicle,
+  annualKm: number,
+  consumptionOverride?: number | null,
+): {
   annualUnits: number;
   annualCost: number;
 } {
+  const effectiveConsumption = consumptionOverride ?? vehicle.consumption;
+
   if (vehicle.energyType === 'electrico') {
-    const annualUnits = (annualKm * vehicle.consumption) / 100;
+    const annualUnits = (annualKm * effectiveConsumption) / 100;
     return {
       annualUnits,
       annualCost: annualUnits * vehicle.energyPrice,
     };
   }
 
-  const annualUnits = vehicle.consumption > 0 ? annualKm / vehicle.consumption : 0;
+  const annualUnits = effectiveConsumption > 0 ? annualKm / effectiveConsumption : 0;
   return {
     annualUnits,
     annualCost: annualUnits * vehicle.energyPrice,
@@ -43,6 +58,67 @@ export function calculateItemAnnualCost(
     annualCost: Math.max(costByKm, costByTime),
     costByKm,
     costByTime,
+  };
+}
+
+function getSortedFuelLogs(logs: FuelLog[]): FuelLog[] {
+  return [...logs].sort((first, second) => {
+    if (first.odometerKm === second.odometerKm) {
+      return first.date.localeCompare(second.date);
+    }
+
+    return first.odometerKm - second.odometerKm;
+  });
+}
+
+export function calculateFuelLogMetrics(vehicle: GarageVehicle): FuelLogMetrics {
+  const logs = getSortedFuelLogs(vehicle.fuelLogs);
+
+  if (logs.length === 0) {
+    return {
+      averageEfficiency: null,
+      totalDistanceKm: 0,
+      totalEnergyUnits: 0,
+      totalSpent: 0,
+      validSegments: 0,
+      latestOdometerKm: vehicle.currentOdometerKm,
+    };
+  }
+
+  let totalDistanceKm = 0;
+  let totalEnergyUnits = 0;
+  let validSegments = 0;
+
+  for (let index = 1; index < logs.length; index += 1) {
+    const previousLog = logs[index - 1];
+    const currentLog = logs[index];
+    const deltaKm = currentLog.odometerKm - previousLog.odometerKm;
+
+    if (deltaKm <= 0 || !previousLog.fullRefill || !currentLog.fullRefill) {
+      continue;
+    }
+
+    totalDistanceKm += deltaKm;
+    totalEnergyUnits += currentLog.energyUnits;
+    validSegments += 1;
+  }
+
+  let averageEfficiency: number | null = null;
+
+  if (totalDistanceKm > 0 && totalEnergyUnits > 0) {
+    averageEfficiency =
+      vehicle.energyType === 'electrico'
+        ? (totalEnergyUnits / totalDistanceKm) * 100
+        : totalDistanceKm / totalEnergyUnits;
+  }
+
+  return {
+    averageEfficiency,
+    totalDistanceKm,
+    totalEnergyUnits,
+    validSegments,
+    totalSpent: logs.reduce((total, log) => total + log.totalCost, 0),
+    latestOdometerKm: Math.max(vehicle.currentOdometerKm, logs[logs.length - 1]?.odometerKm ?? 0),
   };
 }
 
@@ -83,9 +159,12 @@ function buildAlerts(vehicle: Vehicle, breakdown: CostBreakdown): string[] {
   return alerts;
 }
 
-export function calculateVehicleTotal(vehicle: Vehicle): VehicleResult {
+export function calculateVehicleTotal(
+  vehicle: Vehicle,
+  options?: { consumptionOverride?: number | null },
+): VehicleResult {
   const annualKm = calculateAnnualKm(vehicle.baseMonthlyKm, vehicle.trips);
-  const energy = calculateEnergyCost(vehicle, annualKm);
+  const energy = calculateEnergyCost(vehicle, annualKm, options?.consumptionOverride);
 
   let maintenance = 0;
   let wear = 0;

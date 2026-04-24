@@ -65,7 +65,7 @@ export function CostSummary({ result }: CostSummaryProps) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-        <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-zinc-100">Peso por categoria</p>
             <span className="text-xs text-zinc-400">{formatNumber(result.breakdown.annualKm)} km/a</span>
@@ -88,7 +88,7 @@ export function CostSummary({ result }: CostSummaryProps) {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
           <p className="text-sm font-medium text-zinc-100">Lectura rapida</p>
           <div className="mt-4 space-y-3 text-sm text-zinc-300">
             <div className="rounded-2xl border border-cyan-400/15 bg-cyan-500/5 p-3">

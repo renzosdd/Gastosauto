@@ -31,6 +31,29 @@
 }
 
 @layer components {
+  .bg-app-gradient {
+    background-image:
+      radial-gradient(circle at top, rgba(77, 215, 255, 0.12), transparent 28%),
+      radial-gradient(circle at 85% 10%, rgba(115, 240, 167, 0.08), transparent 22%),
+      linear-gradient(180deg, #06080a 0%, #0a0d11 48%, #050607 100%);
+  }
+
+  .sidebar-shell {
+    @apply hidden w-[280px] shrink-0 flex-col justify-between border-r border-white/10 bg-[#090d12]/95 px-5 py-6 lg:flex;
+  }
+
+  .sidebar-link {
+    @apply flex w-full items-center gap-3 rounded-2xl border border-transparent px-4 py-3 text-left text-sm font-medium text-zinc-400 transition hover:border-white/10 hover:bg-white/5 hover:text-zinc-100;
+  }
+
+  .sidebar-link-active {
+    @apply border-cyan-400/15 bg-cyan-500/10 text-cyan-100;
+  }
+
+  .main-topbar {
+    @apply rounded-[30px] border border-white/10 bg-white/5 px-5 py-5 shadow-panel shadow-black/30 backdrop-blur-xl sm:px-6;
+  }
+
   .hero-shell {
     @apply rounded-[32px] border border-white/10 bg-white/5 p-6 shadow-panel shadow-black/40 backdrop-blur-xl sm:p-8;
   }
@@ -113,5 +136,13 @@
 
   .mono-pill {
     @apply rounded-full border border-white/10 bg-white/5 px-3 py-1.5 font-mono text-xs uppercase tracking-[0.18em] text-zinc-300;
+  }
+
+  .garage-list-card {
+    @apply rounded-[24px] border border-white/10 bg-white/5 p-4 transition hover:border-white/15 hover:bg-white/10;
+  }
+
+  .garage-list-card-active {
+    @apply border-cyan-400/20 bg-cyan-500/10 shadow-[0_0_0_1px_rgba(77,215,255,0.08)];
   }
 }

@@ -1,4 +1,4 @@
-import { EnergyType, MaintenanceCategory } from '@/types';
+import { AppPage, EnergyType, MaintenanceCategory } from '@/types';
 
 const currencyFormatter = new Intl.NumberFormat('es-UY', {
   style: 'currency',
@@ -27,6 +27,12 @@ const percentFormatter = new Intl.NumberFormat('es-UY', {
   maximumFractionDigits: 0,
 });
 
+const dateFormatter = new Intl.DateTimeFormat('es-UY', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
+
 export function formatCurrency(value: number, compact = false): string {
   return compact ? compactCurrencyFormatter.format(value) : currencyFormatter.format(value);
 }
@@ -43,6 +49,10 @@ export function formatPercent(value: number): string {
   return percentFormatter.format(value);
 }
 
+export function formatDate(value: string): string {
+  return dateFormatter.format(new Date(`${value}T00:00:00`));
+}
+
 export function getEnergyLabel(energyType: EnergyType): string {
   if (energyType === 'electrico') {
     return 'kWh/100 km';
@@ -53,6 +63,10 @@ export function getEnergyLabel(energyType: EnergyType): string {
 
 export function getEnergyUnitName(energyType: EnergyType): string {
   return energyType === 'electrico' ? 'kWh anuales' : 'litros anuales';
+}
+
+export function getFuelLogUnitLabel(energyType: EnergyType): string {
+  return energyType === 'electrico' ? 'kWh cargados' : 'litros cargados';
 }
 
 export function getEnergyPriceLabel(energyType: EnergyType): string {
@@ -93,4 +107,23 @@ export function getCategoryTone(category: MaintenanceCategory): string {
     electrico: 'bg-emerald-500/10 text-emerald-200 ring-emerald-400/25',
     fijo: 'bg-zinc-500/15 text-zinc-200 ring-white/10',
   }[category];
+}
+
+export function getAppPageLabel(page: AppPage): string {
+  return {
+    resumen: 'Resumen',
+    comparador: 'Comparador',
+    'mis-vehiculos': 'Mis vehiculos',
+    supuestos: 'Supuestos',
+  }[page];
+}
+
+export function formatObservedEfficiency(value: number | null, energyType: EnergyType): string {
+  if (value === null) {
+    return 'Sin datos';
+  }
+
+  return energyType === 'electrico'
+    ? `${formatDecimal(value)} kWh/100 km`
+    : `${formatDecimal(value)} km/L`;
 }

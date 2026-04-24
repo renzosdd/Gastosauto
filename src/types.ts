@@ -1,5 +1,7 @@
 export type EnergyType = 'nafta' | 'gasoil' | 'electrico';
 export type ApplicableEnergyType = EnergyType | 'todos';
+export type AppPage = 'resumen' | 'comparador' | 'mis-vehiculos' | 'supuestos';
+
 export type MaintenanceCategory =
   | 'mantenimiento'
   | 'desgaste'
@@ -45,10 +47,62 @@ export interface Vehicle {
   maintenanceItems: MaintenanceItem[];
 }
 
+export interface FuelLog {
+  id: string;
+  date: string;
+  odometerKm: number;
+  energyUnits: number;
+  totalCost: number;
+  fullRefill: boolean;
+  station: string;
+  notes: string;
+}
+
+export interface MaintenanceRecord {
+  id: string;
+  date: string;
+  itemName: string;
+  category: MaintenanceCategory;
+  cost: number;
+  odometerKm: number;
+  notes: string;
+}
+
+export interface GarageVehicle extends Vehicle {
+  currentOdometerKm: number;
+  fuelLogs: FuelLog[];
+  maintenanceRecords: MaintenanceRecord[];
+}
+
+export interface GlobalAssumptions {
+  updatedAt: string;
+  annualKmReference: number;
+  gasolinePrice: number;
+  dieselPrice: number;
+  electricityPrice: number;
+  analysisHorizonYears: number;
+  discountRatePercent: number;
+}
+
+export interface AppData {
+  comparisonVehicles: Vehicle[];
+  garageVehicles: GarageVehicle[];
+  assumptions: GlobalAssumptions;
+}
+
 export interface ItemAnnualCostResult {
   annualCost: number;
   costByKm: number;
   costByTime: number;
+}
+
+export interface FuelLogMetrics {
+  averageEfficiency: number | null;
+  totalDistanceKm: number;
+  totalEnergyUnits: number;
+  totalSpent: number;
+  validSegments: number;
+  latestOdometerKm: number;
 }
 
 export interface CostBreakdown {
@@ -94,7 +148,7 @@ export interface ComparisonResult {
 }
 
 export interface ImportPayload {
-  version: 1;
+  version: 2;
   exportedAt: string;
-  vehicles: Vehicle[];
+  data: AppData;
 }

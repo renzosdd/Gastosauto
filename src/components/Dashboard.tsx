@@ -123,7 +123,7 @@ export function Dashboard({ results, comparison }: DashboardProps) {
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {results.map((result) => (
-              <div key={result.vehicle.id} className="rounded-2xl border border-white/8 bg-white/3 p-4">
+              <div key={result.vehicle.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div className="mb-4 flex items-center justify-between">
                   <p className="font-medium text-zinc-100">{result.vehicle.name}</p>
                   <span className="text-xs text-zinc-400">
@@ -162,7 +162,7 @@ export function Dashboard({ results, comparison }: DashboardProps) {
             {comparison.annualRanking.map((result, index) => (
               <div
                 key={result.vehicle.id}
-                className="rounded-2xl border border-white/8 bg-white/3 p-4"
+                className="rounded-2xl border border-white/10 bg-white/5 p-4"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -192,7 +192,7 @@ export function Dashboard({ results, comparison }: DashboardProps) {
           </div>
           <div className="space-y-3">
             {allAlerts.length === 0 ? (
-              <div className="rounded-2xl border border-white/8 bg-white/3 p-4 text-sm text-zinc-400">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-zinc-400">
                 Sin alertas disparadas con los valores actuales.
               </div>
             ) : (
